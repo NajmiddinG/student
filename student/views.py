@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.contrib.auth.models import User
-from .models import  Science, Group, Recourse, Student, Video, Slide, Question, Test, ArchiveQuestion, Result
-from .serializers import (UserSerializer, ScienceSerializer, GroupSerializer, RecourseSerializer, StudentSerializer, VideoSerializer, SlideSerializer, QuestionSerializer, TestSerializer, ArchiveQuestionSerializer, ResultSerializer, ResultViewSerializer)
+from .models import  Science, Student, Question, Test, ArchiveQuestion, Result, Rank
+from .serializers import (UserSerializer, ScienceSerializer, StudentSerializer, QuestionSerializer, TestSerializer, ArchiveQuestionSerializer, ResultSerializer, ResultViewSerializer, RankSerializer)
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -69,45 +69,6 @@ def update_student(request, user_id):
         student.save()
 
     return Response(status=200)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([JWTAuthentication])
-def video_list(request):
-    try:
-        user_group = Student.objects.get(user=request.user).group
-        videos = Video.objects.filter(group=user_group)
-        serializer = VideoSerializer(videos, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([JWTAuthentication])
-def video_detail(request, id):
-    try:
-        user_group = Student.objects.get(user=request.user).group
-        video = Video.objects.get(id=id, group=user_group)
-        serializer = VideoSerializer(video)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated, IsAdminUser])
-# @authentication_classes([JWTAuthentication])
-# def create_test(request):
-#     if request.user.is_staff:
-#         # create test in here
-#         return Response({'message': 'Welcome, admin!'})
-#     else:
-#         return Response({'message': 'You are not authorized to access this endpoint.'}, status=403)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -254,17 +215,6 @@ def add_choosen_test_option(request, archive_question_id, choosen):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class RecourceViewSet(viewsets.ViewSet):
-    serializer_class = RecourseSerializer
-
-    @permission_classes([IsAuthenticated])
-    @authentication_classes([JWTAuthentication])
-    def retrieve(self, request, pk=None):
-        queryset = Recourse.objects.filter(science=pk)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -275,24 +225,9 @@ class ScienceViewSet(viewsets.ModelViewSet):
     serializer_class = ScienceSerializer
 
 
-class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-
-
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-
-
-class VideoViewSet(viewsets.ModelViewSet):
-    queryset = Video.objects.all()
-    serializer_class = VideoSerializer
-
-
-class SlideViewSet(viewsets.ModelViewSet):
-    queryset = Slide.objects.all()
-    serializer_class = SlideSerializer
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -318,3 +253,19 @@ class ResultViewSet(viewsets.ModelViewSet):
 class ResultViewViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all()
     serializer_class = ResultViewSerializer
+
+from rest_framework import viewsets
+from .models import Rank
+from .serializers import RankSerializer
+from django_filters import rest_framework as filters
+
+class RankFilter(filters.FilterSet):
+    class Meta:
+        model = Rank
+        fields = ['subject']
+
+class RankViewSet(viewsets.ModelViewSet):
+    queryset = Rank.objects.all()
+    serializer_class = RankSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = RankFilter

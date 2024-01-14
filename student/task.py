@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 from django.utils import timezone
-from .models import Student, Result, Test
+from .models import Student, Result, Test, Rank
 from django.contrib.auth.models import User
 
 
@@ -16,15 +16,16 @@ def task_function_for_complete_test(user, test_id, force=False):
                     if question.correct==question.choosen: correct_answer_number+=1
                 result.result = f'{correct_answer_number} / {count}'
                 test = Test.objects.get(id=test_id)
-                if test.required and test.answers>correct_answer_number: result.status = False
                 result.finished = True
                 if force:
                     t = str(timezone.now() - result.date)
                     result.duration = datetime.strptime(t, '%H:%M:%S.%f').time()
                 result.save()
-
-    except:
-        pass
+                try:
+                    Rank.objects.create(user=student, test=result.test, percent = result.result)
+                except:
+                    pass
+    except: pass
 
 def admin_check():
     users = User.objects.all()

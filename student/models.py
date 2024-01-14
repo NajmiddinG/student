@@ -22,39 +22,12 @@ class Science(models.Model):
         verbose_name = 'Fan'
         verbose_name_plural = 'Fanlar'
 
-class Group(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Guruh nomi")
-    science = models.ManyToManyField(Science, verbose_name="Fanlar")
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self): return self.name
-    
-    class Meta:
-        verbose_name = 'Guruh nomi'
-        verbose_name_plural = 'Guruhlar'
-
-
-class Recourse(models.Model):
-    name = models.CharField(max_length=255, verbose_name='Nomi')
-    file = models.FileField(upload_to='Recourses/', verbose_name='File')
-    group = models.ManyToManyField(Group, verbose_name='Qaysi guruhlar uchun')
-    science = models.ForeignKey(Science, on_delete=models.CASCADE, verbose_name='Qaysi fandan')
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self): return self.name
-
-    class Meta:
-        verbose_name = 'Manba'
-        verbose_name_plural = 'Manbalar'
-
-
 class Student(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='User/', blank=True, null=True, verbose_name="Rasm")
     location = models.CharField(max_length=255, blank=True, null=True, verbose_name="Manzil")
     birth_day = models.DateField(blank=True, null=True, verbose_name="Tug'ilgan kun")
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Tel")
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name="Guruhi")
     pagination = models.IntegerField(default=10)
 
     def __str__(self): 
@@ -63,38 +36,6 @@ class Student(models.Model):
     class Meta:
         verbose_name = "O'quvchi"
         verbose_name_plural = "O'quvchilar"
-
-
-class Video(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Video nomi")
-    image = models.ImageField(upload_to='Video/', verbose_name="Video uchun rasm")
-    link = models.URLField(default='https://youtube.com', verbose_name="Video linki")
-    text = RichTextField(verbose_name="Video uchun post yozing")
-    group = models.ManyToManyField(Group, verbose_name="Qaysi guruhlarga tegishli")
-    science = models.ForeignKey(Science, on_delete=models.CASCADE, verbose_name="Qaysi fanga tegishli")
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self): return self.name
-
-    class Meta:
-        verbose_name = 'Video'
-        verbose_name_plural = 'Videolar'
-
-
-class Slide(models.Model):
-    name = models.CharField(max_length=255, verbose_name='Slide nomi')
-    image = models.ImageField(upload_to='Slides/', verbose_name="Rasm")
-    text = RichTextField(verbose_name="Slide uchun matn")
-    group = models.ManyToManyField(Group, verbose_name="Qaysi guruhlar uchun")
-    science = models.ForeignKey(Science, on_delete=models.CASCADE, verbose_name="Qaysi fanga doir")
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self): return self.name
-
-    class Meta:
-        verbose_name = 'Slide'
-        verbose_name_plural = 'Slidelar'
-
 
 class Question(models.Model):
     question = RichTextField(verbose_name="Savol")
@@ -115,21 +56,17 @@ class Question(models.Model):
 
 class Test(models.Model):
     name = models.CharField(verbose_name="Test nomi", max_length=255)
-    number = models.IntegerField(verbose_name="Nechta savol ishlash kerak", default=10)
+    number = models.IntegerField(verbose_name="Nechta savol berilishi kerak", default=10)
     start = models.DateTimeField(verbose_name="Qachon boshlanadi", default=today)
     end = models.DateTimeField(verbose_name="Qachon tugaydi", default=five_day)
     duration = models.TimeField(verbose_name="Qancha vaqt davom etadi")
-    groups = models.ManyToManyField(Group, verbose_name="Qaysi guruhlar uchun")
     science = models.ForeignKey(Science, verbose_name="Qaysi fandan", on_delete=models.CASCADE)
-    required = models.BooleanField(verbose_name="Majburiymi", default=False)
     questions = models.ManyToManyField(Question, verbose_name="Savollar")
     possibilities = models.IntegerField(verbose_name="Imkoniyatlar soni", default=1)
-    answers = models.IntegerField(verbose_name="Minimal nechta savolni ishlash to'g'ri topishi", default=0)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
-
 
 class ArchiveQuestion(models.Model):
     question = RichTextField(verbose_name='Savol')
@@ -165,3 +102,9 @@ class Result(models.Model):
     class Meta:
         verbose_name = 'Test natija'
         verbose_name_plural = 'Test natijalar oynasi'
+
+class Rank(models.Model):
+    user = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Science, on_delete=models.CASCADE)
+    percent = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True)
+    total_question = models.IntegerField(default=0, null=True, blank=True)
